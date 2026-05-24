@@ -1,0 +1,56 @@
+{
+  "osc_port": 9000,
+  "osc_bind_address": "0.0.0.0",
+  "log_to_file": false,
+  "log_file_path": "cuebridge.log",
+  "show_name": "My Show",
+  "switchers": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "name": "PixelHue",
+      "type": "pixelhue",
+      "ip": "192.168.1.100",
+      "port": 8088,
+      "auto_connect": true,
+      "transition_time": 1000,
+      "username": "admin",
+      "password": "MTIzNDU2",
+      "target_screen_ids": []
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "name": "ATEM",
+      "type": "atem",
+      "ip": "192.168.1.101",
+      "port": 9910,
+      "auto_connect": true,
+      "me": 0
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "name": "Barco",
+      "type": "barco",
+      "ip": "192.168.1.102",
+      "port": 9999,
+      "auto_connect": true
+    }
+  ],
+  "cues": [
+    {
+      "id": "00000000-0000-0000-0000-000000000010",
+      "number": "1",
+      "label": "Opening",
+      "notes": "",
+      "actions": {
+        "00000000-0000-0000-0000-000000000001": {
+          "type": "preset",
+          "preset_id": 1
+        },
+        "00000000-0000-0000-0000-000000000002": {
+          "type": "cut",
+          "preset_id": null
+        }
+      }
+    }
+  ]
+}

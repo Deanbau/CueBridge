@@ -1,0 +1,14 @@
+services:
+  cuebridge:
+    build: .
+    image: cuebridge:latest
+    # host networking gives OSC UDP and mDNS the best chance of working.
+    # If you prefer bridge mode, comment out network_mode and uncomment ports.
+    network_mode: host
+    # ports:
+    #   - "8080:8080"
+    #   - "9000:9000/udp"
+    volumes:
+      - ./cuebridge_config.json:/app/cuebridge_config.json
+    restart: unless-stopped
+    command: ["--headless", "--log-level", "INFO"]

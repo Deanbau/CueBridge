@@ -1,0 +1,104 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-15
+            name: CueBridge-macos-arm64.dmg
+          - os: windows-latest
+            name: CueBridge-windows.exe
+          - os: ubuntu-latest
+            name: CueBridge-linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller pillow
+
+      - name: Build macOS DMG
+        if: runner.os == 'macOS'
+        run: |
+          python assets/create_icon.py
+          mkdir CueBridge.iconset
+          for size in 16 32 128 256 512; do
+            sips -z $size $size assets/icon.png \
+              --out CueBridge.iconset/icon_${size}x${size}.png >/dev/null
+            sips -z $((size*2)) $((size*2)) assets/icon.png \
+              --out CueBridge.iconset/icon_${size}x${size}@2x.png >/dev/null
+          done
+          iconutil -c icns CueBridge.iconset -o assets/icon.icns
+          python -c "from PIL import Image; Image.open('assets/icon.png').resize((80,80), Image.LANCZOS).save('assets/icon_launcher.png')"
+          pyinstaller --onedir --windowed --name CueBridge \
+            --collect-all nicegui \
+            --icon assets/icon.icns \
+            --add-data "assets/icon.png:assets" \
+            --add-data "assets/icon_launcher.png:assets" \
+            main.py
+          mkdir dmg_staging
+          cp -r dist/CueBridge.app dmg_staging/
+          hdiutil create \
+            -volname "CueBridge" \
+            -srcfolder dmg_staging \
+            -ov -format UDZO \
+            dist/CueBridge-macos-arm64.dmg
+
+      - name: Build Windows exe
+        if: runner.os == 'Windows'
+        run: |
+          python assets/create_icon.py
+          python -c "from PIL import Image; Image.open('assets/icon.png').resize((80,80), Image.LANCZOS).save('assets/icon_launcher.png')"
+          pyinstaller --onefile --windowed --name CueBridge `
+            --collect-all nicegui `
+            --icon assets/icon.ico `
+            --add-data "assets/icon.png;assets" `
+            --add-data "assets/icon_launcher.png;assets" `
+            main.py
+          mv dist\CueBridge.exe dist\CueBridge-windows.exe
+        shell: pwsh
+
+      - name: Build Linux binary
+        if: runner.os == 'Linux'
+        run: |
+          pyinstaller --onefile --name CueBridge \
+            --collect-all nicegui \
+            main.py
+          mv dist/CueBridge dist/CueBridge-linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/${{ matrix.name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

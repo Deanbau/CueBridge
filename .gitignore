@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Config (contains IPs and credentials — keep local only)
+cuebridge_config.json
+cuebridge_config.bak.*
+
+# Logs
+*.log
+
+# Editor / IDE
+.vscode/
+.windsurf/
+.cursor/
+.claude/
+*.swp
+.DS_Store
+Thumbs.db
